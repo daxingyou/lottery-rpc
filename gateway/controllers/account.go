@@ -5,7 +5,10 @@ import (
 	"net/http"
 
 	"github.com/mholt/binding"
+	"github.com/micro/go-micro/client"
+	hello "github.com/micro/micro/examples/greeter/server/proto/hello"
 	"github.com/unrolled/render"
+	"golang.org/x/net/context"
 )
 
 type Account struct{}
@@ -38,9 +41,20 @@ func (a Account) Create(w http.ResponseWriter, r *http.Request) {
 func (a Account) Index(res http.ResponseWriter, req *http.Request) {
 	r := render.New(render.Options{})
 
+	greeter := hello.NewSayClient("go.micro.srv.greeter", client.DefaultClient)
+
+	// request the Hello method on the Greeter handler
+	rsp, err := greeter.Hello(context.TODO(), &hello.Request{
+		Name: "John",
+	})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	// find all people in the database
 	account := AccountForm{
-		Name: "test",
+		Name: rsp.Msg,
 	}
 
 	r.JSON(res, 200, account)
